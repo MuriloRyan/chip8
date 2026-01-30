@@ -1,0 +1,15 @@
+
+# TODO List
+
+## Most important features to implement
+
+- [X] CONDITONAL OPCODES
+
+- [X] ASSIGNMENT AND ARITHMETIC OPCODES
+
+- [] SOUND RELATED OPCODES
+
+- [] SCREEN RENDERING OPCODE (DXYN)
+
+- [] OPCODE READING
+
