@@ -1,10 +1,19 @@
 from random import randrange
+from opcodes import OPCODE_TABLE, SUB_TABLE_0, SUB_TABLE_8, SUB_TABLE_E, SUB_TABLE_F
 
 class Chip8Hardware:
-    def __init__(self):
+    def __init__(self, opcode_table = OPCODE_TABLE, opcode_table0 = SUB_TABLE_0,
+                 opcode_table8 = SUB_TABLE_8, opcode_tableE = SUB_TABLE_E,
+                 opcode_tableF = SUB_TABLE_F):
         LARGURA, ALTURA = 64, 32
 
         self.screen = [[0 for _ in range(LARGURA)] for _ in range(ALTURA)]
+
+        self.opcode_table = opcode_table
+        self.opcode_table0 = opcode_table0
+        self.opcode_table8 = opcode_table8
+        self.opcode_tableE = opcode_tableE
+        self.opcode_tableF = opcode_tableF
 
         self.memory = [0] * 4096      # RAM
         self.v = [0] * 16             # Registers V0-VF
@@ -12,12 +21,64 @@ class Chip8Hardware:
         self.pc = 0x200               # Program Counter starts at 0x200
         self.stack = [0] * 16         # Stack
         self.sp = 0                   # Stack Pointer
-        
+
+        self.keys = [0] * 16
+        self.waiting_key = 0
+
         self.delay_timer = 0
         self.sound_timer = 0
+    
+        self.fontset = [
+            0xF0, 0x90, 0x90, 0x90, 0xF0, # 0
+            0x20, 0x60, 0x20, 0x20, 0x70, # 1
+            0xF0, 0x10, 0xF0, 0x80, 0xF0, # 2
+            0xF0, 0x10, 0xF0, 0x10, 0xF0, # 3
+            0x90, 0x90, 0xF0, 0x10, 0x10, # 4
+            0xF0, 0x80, 0xF0, 0x10, 0xF0, # 5
+            0xF0, 0x80, 0xF0, 0x90, 0xF0, # 6
+            0xF0, 0x10, 0x20, 0x40, 0x40, # 7
+            0xF0, 0x90, 0xF0, 0x90, 0xF0, # 8
+            0xF0, 0x90, 0xF0, 0x10, 0xF0, # 9
+            0xF0, 0x90, 0xF0, 0x90, 0x90, # A
+            0xE0, 0x90, 0xE0, 0x90, 0xE0, # B
+            0xF0, 0x80, 0x80, 0x80, 0xF0, # C
+            0xE0, 0x90, 0x90, 0x90, 0xE0, # D
+            0xF0, 0x80, 0xF0, 0x80, 0xF0, # E
+            0xF0, 0x80, 0xF0, 0x80, 0x80  # F
+        ]
+    
+        for i, byte in enumerate(self.fontset):
+            self.memory[i] = byte
 
     def read_opcode(self, opcode):
-        instruction_type = (opcode & 0xF000) >> 12
+        if opcode == 0x0000:
+            return opcode
+
+        self.pc += 2
+
+        # Decode
+        first = (opcode & 0xF000) >> 12
+        
+        method_name = self.opcode_table.get(first)
+        # Sub-selection logic
+        if method_name == "TABLE_0":
+            method_name = self.opcode_table0.get(opcode)
+            getattr(self, method_name)()
+            
+            return opcode
+        elif method_name == "TABLE_8":
+            method_name = self.opcode_table8.get(opcode & 0x000F)
+        elif method_name == "TABLE_E":
+            method_name = self.opcode_tableE.get(opcode & 0x00FF)
+        elif method_name == "TABLE_F":
+            method_name = self.opcode_tableF.get(opcode & 0x00FF)
+
+        # Execute
+        if method_name:
+            method = getattr(self, method_name)
+            method(opcode)
+
+            return opcode
 
     # --- 0x0: SYSTEM INSTRUCTIONS ---
     def CLS(self):
@@ -189,3 +250,87 @@ class Chip8Hardware:
                         self.v[0xF] = 1
 
                     self.screen[curr_y][curr_x] ^= 1
+    
+    def SKP_Vx(self, opcode):
+        """ Ex9E """
+
+        Vx = (opcode & 0x0F00) >> 8
+
+        if self.keys[Vx] == 1:
+            self.pc += 2
+    
+    def SKNP_Vx(self, opcode):
+        """ ExA1 """
+
+        Vx = (opcode & 0x0F00) >> 8
+
+        if self.keys[Vx] == 0:
+            self.pc += 2
+    
+    def LD_Vx_DT(self, opcode):
+        """ Fx07 """
+        x = (opcode & 0x0F00) >> 8
+
+        self.v[x] = self.delay_timer
+    
+    def LD_Vx_K(self, opcode):
+        """ Fx0A: Wait for key press. VX = index of the key. """
+        x = (opcode & 0x0F00) >> 8
+        key_detected = False
+
+        for index, is_pressed in enumerate(self.keys):
+            if is_pressed == 1:
+                self.v[x] = index
+                key_detected = True
+                break
+        if not key_detected:
+            self.pc -= 2
+            
+    def LD_DT_Vx(self, opcode):
+        """ Fx15 """
+        x = (opcode & 0x0F00) >> 8
+
+        self.delay_timer = self.v[x]
+
+    def LD_ST_Vx(self, opcode):
+        """ Fx18 """
+        x = (opcode & 0x0F00) >> 8
+
+        self.sound_timer = self.v[x]
+    
+    def ADD_I_Vx(self, opcode):
+        """ Fx1E: Set I = I + VX. """
+        x = (opcode & 0x0F00) >> 8
+        self.i = (self.i + self.v[x]) & 0xFFF
+
+    def LD_B_Vx(self, opcode):
+        """ FX33 """
+        x = (opcode & 0x0F00) >> 8
+
+        number = self.v[x]
+
+        self.memory[self.i] = number // 100
+        self.memory[self.i + 1] = (number % 100) // 10
+        self.memory[self.i + 2] = (number % 10)
+
+    def LD_I_Vx(self, opcode):
+        """ FX55 """
+        x = (opcode & 0x0F00) >> 8
+
+        for count in range(x + 1):
+            self.memory[self.i + count] = self.v[count]
+
+    def LD_Vx_I(self, opcode):
+        """ Fx65 """
+
+        x = (opcode & 0x0F00) >> 8
+
+        for count in range(x + 1):
+            self.v[count] = self.memory[self.i + count]
+    
+    def LD_F_Vx(self, opcode):
+        """ FX29: Point I to the font sprite for the character in VX. """
+        x = (opcode & 0x0F00) >> 8
+        character = self.v[x] & 0x0F
+        
+        self.i = character * 5
