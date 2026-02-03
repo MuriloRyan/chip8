@@ -3,7 +3,6 @@ from random import randrange
 class Chip8Hardware:
     def __init__(self):
         LARGURA, ALTURA = 64, 32
-        ESCALA = 10
 
         self.screen = [[0 for _ in range(LARGURA)] for _ in range(ALTURA)]
 
@@ -159,3 +158,34 @@ class Chip8Hardware:
         x = (opcode & 0x0F00) >> 8
         kk = (opcode & 0x00FF)
         self.v[x] = randrange(256) & kk
+
+    def DRW_Vx_Vy_nibble(self, opcode):
+        """
+        DXYN: Draw a sprite at (VX, VY) with N bytes of height.
+        The sprite is stored in memory starting at the location stored in I.
+        VF is set to 1 if any screen pixels are flipped from set to unset (collision).
+        """
+
+        x_reg = (opcode & 0x0F00) >> 8
+        y_reg = (opcode & 0x00F0) >> 4
+        height = (opcode & 0x000F)
+        x_start = self.v[x_reg] % 64
+        y_start = self.v[y_reg] % 32
+
+        self.v[0xF] = 0
+
+        for row in range(height):
+
+            sprite_byte = self.memory[self.i + row]
+
+            for col in range(8):
+                sprite_pixel = (sprite_byte >> (7 - col)) & 1
+
+                if sprite_pixel == 1:
+                    curr_x = (x_start + col) % 64
+                    curr_y = (y_start + row) % 32
+
+                    if self.screen[curr_y][curr_x] == 1:
+                        self.v[0xF] = 1
+
+                    self.screen[curr_y][curr_x] ^= 1
