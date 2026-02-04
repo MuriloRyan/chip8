@@ -50,6 +50,13 @@ class Chip8Hardware:
         for i, byte in enumerate(self.fontset):
             self.memory[i] = byte
 
+    def cycle(self):
+        hi_bytes, lo_bytes = (self.memory[self.pc]), self.memory[self.pc+1]
+        opcode = (hi_bytes << 8)| lo_bytes
+
+        self.read_opcode(opcode)
+        return f'{hex(opcode)} at {hex(self.pc)}'
+
     def read_opcode(self, opcode):
         if opcode == 0x0000:
             return opcode
