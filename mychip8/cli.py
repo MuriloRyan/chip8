@@ -1,7 +1,26 @@
-from calendar import c
 from settings import STANDARD_SETTINGS
 from screen import EmulatorScreen
 from chip8 import Chip8Hardware
+
+import tkinter as tk
+from tkinter import filedialog
+import os
+
+def select_rom_file():
+    root = tk.Tk()
+    root.withdraw()
+
+    initial_dir = os.getcwd()
+
+    # Abre a janela de seleção
+    file_path = filedialog.askopenfilename(
+        initialdir=initial_dir,
+        title="Choose a CHIP-8 ROM file",
+        filetypes=(("CHIP-8 ROMs", "*.ch8"), ("All files", "*.*"))
+    )
+    
+    root.destroy()
+    return file_path
 
 def cli_loop():
     user_config = STANDARD_SETTINGS.copy()
@@ -14,7 +33,7 @@ def cli_loop():
     command = input("Enter command (type 'exit' to quit): ")
 
     if command == 'run':
-        rom_path = input("Enter ROM path: ")
+        rom_path = select_rom_file()
         run_emulator(rom_path, user_config)
         return True
 
