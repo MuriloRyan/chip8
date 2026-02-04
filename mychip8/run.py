@@ -25,7 +25,7 @@ pygame.display.set_caption("CHIP-8 Debugger View")
 clock = pygame.time.Clock()
 
 hardware = Chip8Hardware()
-load_rom(hardware, 'test_opcode.ch8')
+load_rom(hardware, 'snake.ch8')
 
 running = True
 while running:
@@ -42,8 +42,8 @@ while running:
                 hardware.keys[KEY_MAP[event.key]] = 0
 
     for _ in range(10):
-        print(cicle(hardware))
-    
+        cicle(hardware)
+
     if hardware.delay_timer > 0:
         hardware.delay_timer -= 1
     if hardware.sound_timer > 0:
@@ -53,9 +53,9 @@ while running:
     screen.fill(BG_COLOR)
     for y in range(32):
         for x in range(64):
-            if hardware.screen[y][x] == 1:
+            if hardware.screen[y][x]: # Só desenha se for 1
                 pygame.draw.rect(screen, PIXEL_COLOR, 
-                                 (x * SCALE, y * SCALE, SCALE - 1, SCALE - 1))
+                                (x * SCALE, y * SCALE, SCALE, SCALE))
     
     pygame.display.flip()
     clock.tick(60)

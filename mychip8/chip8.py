@@ -252,19 +252,17 @@ class Chip8Hardware:
                     self.screen[curr_y][curr_x] ^= 1
     
     def SKP_Vx(self, opcode):
-        """ Ex9E """
-
-        Vx = (opcode & 0x0F00) >> 8
-
-        if self.keys[Vx] == 1:
+        """ EX9E: Skip next instruction if key with the value of VX is pressed. """
+        x = (opcode & 0x0F00) >> 8
+        key = self.v[x]
+        if self.keys[key] == 1:
             self.pc += 2
-    
+
     def SKNP_Vx(self, opcode):
-        """ ExA1 """
-
-        Vx = (opcode & 0x0F00) >> 8
-
-        if self.keys[Vx] == 0:
+        """ EXA1: Skip next instruction if key with the value of VX is NOT pressed. """
+        x = (opcode & 0x0F00) >> 8
+        key = self.v[x]
+        if self.keys[key] == 0:
             self.pc += 2
     
     def LD_Vx_DT(self, opcode):
