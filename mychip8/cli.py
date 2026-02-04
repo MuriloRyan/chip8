@@ -1,6 +1,6 @@
-from settings import STANDARD_SETTINGS
-from screen import EmulatorScreen
-from chip8 import Chip8Hardware
+from mychip8.settings import STANDARD_SETTINGS, PALETTES
+from mychip8.screen import EmulatorScreen
+from mychip8.chip8 import Chip8Hardware
 
 import tkinter as tk
 from tkinter import filedialog
@@ -46,7 +46,6 @@ def cli_loop():
 
         choicen = input("Choose a palette: ")
         if choicen in ["matrix", "gameboy", "dracula"]:
-            from settings import PALETTES
 
             user_config["bg_color"] = PALETTES[choicen]["bg"]
             user_config["pixel_color"] = PALETTES[choicen]["pixel"]

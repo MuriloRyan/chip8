@@ -1,5 +1,5 @@
 from random import randrange
-from opcodes import OPCODE_TABLE, SUB_TABLE_0, SUB_TABLE_8, SUB_TABLE_E, SUB_TABLE_F
+from mychip8.opcodes import OPCODE_TABLE, SUB_TABLE_0, SUB_TABLE_8, SUB_TABLE_E, SUB_TABLE_F
 
 class Chip8Hardware:
     def __init__(self, opcode_table = OPCODE_TABLE, opcode_table0 = SUB_TABLE_0,
