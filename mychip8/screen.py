@@ -73,6 +73,7 @@ class EmulatorScreen:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                    return False
                 
                 if event.type == pygame.KEYDOWN:
                     if event.key in self.key_map:
