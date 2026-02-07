@@ -6,6 +6,8 @@ import tkinter as tk
 from tkinter import filedialog
 import os
 
+user_config = STANDARD_SETTINGS.copy()
+
 def select_rom_file():
     root = tk.Tk()
     root.withdraw()
@@ -23,7 +25,6 @@ def select_rom_file():
     return file_path
 
 def cli_loop():
-    user_config = STANDARD_SETTINGS.copy()
 
     print("\nMyChip8 Emulator CLI")
     print("Murilo R.B Silva - 2026\n")
