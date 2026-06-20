@@ -1,5 +1,9 @@
-from opcode_table import MNEMONIC_TABLE
-from string import hexdigits
+try:
+    from opcode_table import MNEMONIC_TABLE
+    from string import hexdigits
+except ImportError:
+    from mychipssem.opcode_table import MNEMONIC_TABLE
+    from string import hexdigits
 
 class Chip8Assembler:
 
@@ -207,6 +211,19 @@ class Chip8Assembler:
 
         return opcode.to_bytes(2, byteorder="big")
 
+    def one_step_from_code(self, entry: str):
+        self.scanned.clear()
+        self.resolved.clear()
+
+        self.scan(entry)
+        self.resolve()
+
+        instruction = self.resolved[0]
+
+        return self.encode(
+            instruction["instruction"],
+            instruction["args"]
+        )
 
     def cycle_with_file(self, input_filename: str, output_filename: str):
         with open(input_filename, 'r') as input_file:
@@ -224,6 +241,3 @@ class Chip8Assembler:
                 output_file.write(byte)
 
 
-if __name__=='__main__':
-    ca = Chip8Assembler()
-    ca.cycle_with_file('test.asm', 'test.ch8')
