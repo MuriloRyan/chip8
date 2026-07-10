@@ -168,53 +168,71 @@ class Chip8Hardware:
         """8XY1: Set VX = VX OR VY."""
         x = (opcode & 0x0F00) >> 8
         y = (opcode & 0x00F0) >> 4
-        self.v[x] |= self.v[y]
+        self.v[x] = (self.v[x] | self.v[y])
 
     def AND_Vx_Vy(self, opcode):
         """8XY2: Set VX = VX AND VY."""
         x = (opcode & 0x0F00) >> 8
         y = (opcode & 0x00F0) >> 4
-        self.v[x] &= self.v[y]
+        self.v[x] = (self.v[x] & self.v[y])
 
     def XOR_Vx_Vy(self, opcode):
         """8XY3: Set VX = VX XOR VY."""
         x = (opcode & 0x0F00) >> 8
         y = (opcode & 0x00F0) >> 4
-        self.v[x] ^= self.v[y]
+        self.v[x] = (self.v[x] ^ self.v[y])
 
     def ADD_Vx_Vy(self, opcode):
         """8XY4: Set VX = VX + VY. Set VF = 1 if carry (> 255)."""
         x = (opcode & 0x0F00) >> 8
         y = (opcode & 0x00F0) >> 4
         sum_val = self.v[x] + self.v[y]
-        self.v[0xF] = 1 if sum_val > 255 else 0
         self.v[x] = sum_val & 0xFF
+        self.v[0xF] = 1 if sum_val > 255 else 0 
 
     def SUB_Vx_Vy(self, opcode):
         """8XY5: Set VX = VX - VY. Set VF = 1 if NOT borrow (VX >= VY)."""
-        x = (opcode & 0x0F00) >> 8
-        y = (opcode & 0x00F0) >> 4
-        self.v[0xF] = 1 if self.v[x] >= self.v[y] else 0
-        self.v[x] = (self.v[x] - self.v[y]) & 0xFF
+        vx = self.v[(opcode & 0x0F00) >> 8]
+        vy = self.v[(opcode & 0x00F0) >> 4]
+        borrow = 1 if vx >= vy else 0
+
+        self.v[(opcode & 0x0F00) >> 8] = (vx - vy) & 0xFF
+        self.v[0xF] = borrow
 
     def SHR_Vx_Vy(self, opcode):
-        """8XY6: Set VX = VX SHR 1. VF = Least Significant Bit (LSB)."""
         x = (opcode & 0x0F00) >> 8
-        self.v[0xF] = self.v[x] & 0x1
-        self.v[x] >>= 1
 
+        vx = self.v[x]
+
+        result = (vx >> 1) & 0xFF
+        flag = vx & 1
+
+        self.v[x] = result
+        self.v[0xF] = flag
     def SUBN_Vx_Vy(self, opcode):
         """8XY7: Set VX = VY - VX. Set VF = 1 if NOT borrow (VY >= VX)."""
         x = (opcode & 0x0F00) >> 8
         y = (opcode & 0x00F0) >> 4
-        self.v[0xF] = 1 if self.v[y] >= self.v[x] else 0
-        self.v[x] = (self.v[y] - self.v[x]) & 0xFF
+        
+        vx = self.v[x]
+        vy = self.v[y]
 
+        borrow = 1 if vy >= vx else 0
+        result = (vy - vx) & 0xFF
+
+        self.v[x] = result
+        self.v[0xF] = borrow
+        
     def SHL_Vx_Vy(self, opcode):
-        """8XYE: Set VX = VX SHL 1. VF = Most Significant Bit (MSB)."""
         x = (opcode & 0x0F00) >> 8
-        self.v[0xF] = (self.v[x] & 0x80) >> 7
-        self.v[x] = (self.v[x] << 1) & 0xFF
+
+        vx = self.v[x]
+
+        result = (vx << 1) & 0xFF
+        flag = (vx >> 7) & 1
+
+        self.v[x] = result
+        self.v[0xF] = flag
     
     def LD_I(self, opcode):
         """ANNN: Set Index Register I = NNN."""

@@ -19,7 +19,7 @@ selected_cycles = IntVar(value=10) # Default to 10 cycles
 
 # 2. Action Functions
 def select_file():
-    file = filedialog.askopenfilename(filetypes=[("CHIP-8 ROM", "*.ch8")])
+    file = filedialog.askopenfilename(initialdir='~/Downloads',filetypes=[("CHIP-8 ROM", "*.ch8")])
     if file:
         rom_path.set(file)
 
