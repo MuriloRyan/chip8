@@ -3,7 +3,8 @@ import pygame
 PALETTES = {
     "matrix": {"bg": (0, 0, 0), "pixel": (0, 255, 65)},
     "gameboy": {"bg": (155, 188, 15), "pixel": (15, 56, 15)},
-    "dracula": {"bg": (40, 42, 54), "pixel": (80, 250, 123)}
+    "dracula": {"bg": (40, 42, 54), "pixel": (80, 250, 123)},
+    "BlackNWhite": {"bg": (0,0,0), "pixel": (255,255,255)}
 }
 
 STANDARD_SETTINGS = {
